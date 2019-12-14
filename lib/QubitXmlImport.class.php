@@ -993,7 +993,7 @@ class QubitXmlImport
   {
     $nodeValue = '';
 
-    if (!($node instanceof DOMAttr))
+    if (!($node instanceof DOMAttr) && !($node instanceof DOMText))
     {
       $nodeList = $node->getElementsByTagName('p');
 
