@@ -346,6 +346,10 @@ class AccessionEditAction extends DefaultEditAction
   {
     parent::execute($request);
 
+    $this->alternativeIdentifiersComponent = new InformationObjectAlternativeIdentifiersComponent($this->context, 'informationobject', 'alternativeIdentifiers');
+    $this->alternativeIdentifiersComponent->resource = $this->resource;
+    $this->alternativeIdentifiersComponent->execute($this->request);
+
     // Parameter "accession" is sent when creating an accrual
     if (isset($request->accession))
     {
@@ -372,6 +376,8 @@ class AccessionEditAction extends DefaultEditAction
       $this->form->bind($request->getPostParameters());
       if ($this->form->isValid())
       {
+        $this->alternativeIdentifiersComponent->processForm();
+
         $this->relatedDonorComponent->processForm();
 
         $this->eventComponent->processForm();

@@ -389,6 +389,22 @@ class QubitObject extends BaseObject implements Zend_Acl_Resource_Interface
        Properties
   *********************/
 
+  public function getProperties($name = null, $scope = null)
+  {
+    $criteria = new Criteria;
+    $criteria->add(QubitProperty::OBJECT_ID, $this->id);
+    if ($name)
+    {
+      $criteria->add(QubitProperty::NAME, $name);
+    }
+    if ($scope)
+    {
+      $criteria->add(QubitProperty::SCOPE, $scope);
+    }
+
+    return QubitProperty::get($criteria);
+  }
+
   /**
    * Get first matching related property by name (optionally scope).
    * Return an empty QubitProperty object if a matching one doesn't exist.

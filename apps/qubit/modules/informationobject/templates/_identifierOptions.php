@@ -5,10 +5,12 @@
     </a>
   <?php endif; ?>
 
-  <a href="#" class="identifier-action" id="generate-identifier"
-    data-generate-identifier-url="<?php echo url_for(array('module' => 'informationobject', 'action' => 'generateIdentifier')) ?>">
-    <?php echo __('Generate identifier') ?>
-  </a>
+  <?php if (!isset($hideGenerateButton)): // Some object types don't support alt id generation ?>
+    <a href="#" class="identifier-action" id="generate-identifier"
+      data-generate-identifier-url="<?php echo url_for(array('module' => 'informationobject', 'action' => 'generateIdentifier')) ?>">
+      <?php echo __('Generate identifier') ?>
+    </a>
+  <?php endif; ?>
 </div>
 
 <input name="usingMask" id="using-identifier-mask" type="hidden" value="<?php echo $mask ?>"/>
