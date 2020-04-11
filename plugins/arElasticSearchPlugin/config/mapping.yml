@@ -64,6 +64,18 @@ mapping:
       type_id: { type: integer, include_in_all: false }
       actor_id: { type: integer, include_in_all: false }
 
+  relation:
+    _attributes:
+      nested_only: true
+    dynamic: strict
+    type: nested
+    properties:
+      type_id: { type: integer, include_in_all: false }
+      object_id: { type: integer, include_in_all: false }
+      object_class: { type: keyword, include_in_all: false }
+      subject_id: { type: integer, include_in_all: false }
+      subject_class: { type: keyword, include_in_all: false }
+
   donor:
     _attributes:
       i18nExtra: [actor]
@@ -338,6 +350,7 @@ mapping:
       standardized_names: other_name
       subjects: term
       places: term
+      relations: relation
     _partial_foreign_types:
       occupations:
         _i18nFields: [name, content]

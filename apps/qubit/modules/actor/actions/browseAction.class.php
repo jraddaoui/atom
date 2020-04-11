@@ -36,13 +36,16 @@ class ActorBrowseAction extends DefaultBrowseAction
       'repository',
       'hasDigitalObject',
       'entityType',
-      'emptyField'
+      'emptyField',
+      'relatedType',
+      'relatedAuthority'
     ),
 
     $FILTERTAGS = array(
       'hasDigitalObject' => array(),
       'repository'       => array('model' => 'QubitRepository'),
       'entityType'       => array('model' => 'QubitTerm'),
+      'relatedType'      => array('model' => 'QubitTerm'),
       'occupation'       => array('model' => 'QubitTerm'),
       'place'            => array('model' => 'QubitTerm'),
       'subject'          => array('model' => 'QubitTerm'),
@@ -104,8 +107,8 @@ class ActorBrowseAction extends DefaultBrowseAction
         }
         else
         {
-          $choices = array();
-          $choices[null] = null;
+          $choices = array(null => null);
+
           foreach (QubitRepository::get($criteria) as $repository)
           {
             $choices[$repository->id] = $repository->__toString();
@@ -143,17 +146,14 @@ class ActorBrowseAction extends DefaultBrowseAction
         break;
 
       case 'entityType':
-        $this->form->setValidator($name, new sfValidatorString);
-
-        $choices = array();
-        $choices[null] = null;
+        $choices = array(null => null);
 
         foreach (QubitTaxonomy::getTaxonomyTerms(QubitTaxonomy::ACTOR_ENTITY_TYPE_ID) as $item)
         {
           $choices[$item->id] = $item->__toString();
         }
 
-        $this->form->setValidator($name, new sfValidatorString);
+        $this->form->setValidator($name, new sfValidatorChoice(array('choices' => array_keys($choices))));
         $this->form->setWidget($name, new sfWidgetFormSelect(array('choices' => $choices)));
 
         if (!empty($this->getFilterTagObject('entityType')))
@@ -164,23 +164,55 @@ class ActorBrowseAction extends DefaultBrowseAction
         break;
 
       case 'emptyField':
-        $this->form->setValidator($name, new sfValidatorString);
-
-        $choices = array();
-        $choices[null] = null;
+        $choices = array(null => null);
 
         foreach ($this->fieldOptions as $field => $label)
         {
           $choices[$field] = $label;
         }
 
-        $this->form->setValidator($name, new sfValidatorString);
+        $this->form->setValidator($name, new sfValidatorChoice(array('choices' => array_keys($choices))));
         $this->form->setWidget($name, new sfWidgetFormSelect(array('choices' => $choices)));
 
         if (!empty($request->emptyField))
         {
           $this->form->setDefault('emptyField', $request->emptyField);
         }
+
+        break;
+
+      case 'relatedType':
+        $choices = array(null => null);
+
+        foreach (QubitTaxonomy::getTaxonomyTerms(QubitTaxonomy::ACTOR_RELATION_TYPE_ID) as $item)
+        {
+          // Omit category terms
+          if ($item->parentId != QubitTerm::ROOT_ID)
+          {
+            $choices[$item->id] = $item->__toString();
+          }
+        }
+
+        $this->form->setValidator($name, new sfValidatorChoice(array('choices' => array_keys($choices))));
+        $this->form->setWidget($name, new sfWidgetFormSelect(array('choices' => $choices)));
+
+        if (!empty($this->getFilterTagObject($name)))
+        {
+          $this->form->setDefault($name, $this->getFilterTagObject($name)->id);
+        }
+
+        break;
+
+      case 'relatedAuthority':
+        $defaultChoices = array();
+        if (!empty($request->$name))
+        {
+          $actor = $this->getRelatedAuthority();
+          $defaultChoices = array($request->$name => $actor->getAuthorizedFormOfName(array('cultureFallback' => true)));
+        }
+
+        $this->form->setValidator($name, new sfValidatorString);
+        $this->form->setWidget($name, new sfWidgetFormSelect(array('choices' => $defaultChoices)));
 
         break;
     }
@@ -297,13 +329,14 @@ class ActorBrowseAction extends DefaultBrowseAction
       $this->addField($name, $request);
     }
 
-    // Set which values will be relayed via the advanced search form
+    // Set which values will be relayed as hidden fields via the advanced search form
     $allowed = array_merge(
       array_keys($this::$AGGS),
       array('sort', 'sortDir')
     );
 
-    $ignored = array('repository', 'entityType');
+    // These get relayed as form field default values
+    $ignored = array('repository', 'entityType', 'relatedType');
 
     $this->setHiddenFields($request, $allowed, $ignored);
   }
@@ -321,6 +354,101 @@ class ActorBrowseAction extends DefaultBrowseAction
       $queryField = new \Elastica\Query\Term;
       $queryField->setTerm('hasDigitalObject', $this->request->hasDigitalObject);
       $this->search->queryBool->addMust($queryField);
+    }
+
+    // Filter by relations to a specific actor
+    if (isset($this->request->relatedAuthority))
+    {
+      // Parse actor from route
+      $actor = $this->getRelatedAuthority();
+
+      if (!empty($actor->id))
+      {
+        $queryBool = new \Elastica\Query\BoolQuery;
+
+        // Result relations must have either a related object or subject ID
+        $queryRelatedBool = new \Elastica\Query\BoolQuery;
+
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('relations.objectId', $actor->id);
+        $queryRelatedBool->addShould($queryField);
+
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('relations.subjectId', $actor->id);
+        $queryRelatedBool->addShould($queryField);
+
+        $queryBool->addMust($queryRelatedBool);
+
+        // Result relations must be between two actors
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('relations.objectClass', 'QubitActor');
+        $queryBool->addMust($queryField);
+
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('relations.subjectClass', 'QubitActor');
+        $queryBool->addMust($queryField);
+
+        // Filter by nested relations
+        $queryNested = new \Elastica\Query\Nested();
+        $queryNested->setPath('relations');
+        $queryNested->setQuery($queryBool);
+
+        $this->search->queryBool->addMust($queryNested);
+
+        // Omit the actor that the others are related to
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('_id', $actor->id);
+        $queryBool->addMustNot($queryField);
+
+        $this->search->queryBool->addMust($queryNested);
+      }
+    }
+
+    // Fiter by relation type
+    if ($this->request->relatedType)
+    {
+      $queryBool = new \Elastica\Query\BoolQuery;
+
+      // Result relations must have either the specified type or its converse
+      $queryTypeBool = new \Elastica\Query\BoolQuery;
+
+      $queryField = new \Elastica\Query\Term;
+      $queryField->setTerm('relations.typeId', $this->request->relatedType);
+      $queryTypeBool->addShould($queryField);
+
+      $converseTerms = QubitRelation::getBySubjectOrObjectId(
+        $this->request->relatedType, array('typeId' => QubitTerm::CONVERSE_TERM_ID)
+      );
+
+      if (count($converseTerms))
+      {
+        $converseTypeTerm = $converseTerms[0]->getOpposedObject($this->request->relatedType);
+
+        if ($this->request->relatedType != $converseTypeTerm->id)
+        {
+          $queryField = new \Elastica\Query\Term;
+          $queryField->setTerm('relations.typeId', $converseTypeTerm->id);
+          $queryTypeBool->addShould($queryField);
+        }
+      }
+
+      $queryBool->addMust($queryTypeBool);
+
+      // Result relations must be between two actors
+      $queryField = new \Elastica\Query\Term;
+      $queryField->setTerm('relations.objectClass', 'QubitActor');
+      $queryBool->addMust($queryField);
+
+      $queryField = new \Elastica\Query\Term;
+      $queryField->setTerm('relations.subjectClass', 'QubitActor');
+      $queryBool->addMust($queryField);
+
+      // Filter by nested relations
+      $queryNested = new \Elastica\Query\Nested();
+      $queryNested->setPath('relations');
+      $queryNested->setQuery($queryBool);
+
+      $this->search->queryBool->addMust($queryNested);
     }
 
     // Filter out results if a specific field isn't empty
@@ -440,6 +568,15 @@ class ActorBrowseAction extends DefaultBrowseAction
     if (!isset($request->subquery) && isset($request->sq0) && !isset($request->sf0))
     {
       $request->subquery = $request->sq0;
+    }
+  }
+
+  private function getRelatedAuthority()
+  {
+    if (!empty($this->request->relatedAuthority))
+    {
+      $params = $this->context->routing->parse(Qubit::pathInfo($this->request->relatedAuthority));
+      return $params['_sf_route']->resource;
     }
   }
 }
