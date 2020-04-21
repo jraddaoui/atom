@@ -197,21 +197,23 @@ class QubitActor extends BaseActor
       if (count($creationIoIds) > 0)
       {
         $jobOptions = array(
-          'ioIds' => $creationIoIds,
-          'updateIos' => true,
+          'ids' => $creationIoIds,
+          'modelClass' => 'QubitInformationObject',
+          'updateResource' => true,
           'updateDescendants' => true
         );
-        QubitJob::runJob('arUpdateEsIoDocumentsJob', $jobOptions);
+        QubitJob::runJob('arUpdateEsDocumentsJob', $jobOptions);
       }
 
       if (count($otherIoIds) > 0)
       {
         $jobOptions = array(
-          'ioIds' => $otherIoIds,
-          'updateIos' => true,
+          'ids' => $otherIoIds,
+          'modelClass' => 'QubitInformationObject',
+          'updateResource' => true,
           'updateDescendants' => false
         );
-        QubitJob::runJob('arUpdateEsIoDocumentsJob', $jobOptions);
+        QubitJob::runJob('arUpdateEsDocumentsJob', $jobOptions);
       }
 
       // Let user know related descriptions update has started

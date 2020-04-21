@@ -600,11 +600,12 @@ class TermEditAction extends DefaultEditAction
 
     // Update asynchronously the linked IOs
     $jobOptions = array(
-      'ioIds' => $ioIds,
-      'updateIos' => true,
+      'ids' => $ioIds,
+      'modelClass' => 'QubitInformationObject',
+      'updateResource' => true,
       'updateDescendants' => false
     );
-    QubitJob::runJob('arUpdateEsIoDocumentsJob', $jobOptions);
+    QubitJob::runJob('arUpdateEsDocumentsJob', $jobOptions);
 
     // Let user know related descriptions update has started
     $jobsUrl = $this->context->routing->generate(null, array('module' => 'jobs', 'action' => 'browse'));

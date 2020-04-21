@@ -155,11 +155,12 @@ class QubitRepository extends BaseRepository
 
       // Update asynchronously the saved IOs ids
       $jobOptions = array(
-        'ioIds' => $ioIds,
-        'updateIos' => true,
+        'ids' => $ioIds,
+        'modelClass' => 'QubitInformationObject',
+        'updateResource' => true,
         'updateDescendants' => true
       );
-      QubitJob::runJob('arUpdateEsIoDocumentsJob', $jobOptions);
+      QubitJob::runJob('arUpdateEsDocumentsJob', $jobOptions);
 
       return;
     }
