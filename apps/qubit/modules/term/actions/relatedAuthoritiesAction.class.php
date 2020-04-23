@@ -102,18 +102,7 @@ class TermRelatedAuthoritiesAction extends DefaultBrowseAction
   protected function doSearch($request)
   {
     $this->setSort($request);
-    return self::getTermActorEsResults($this->resource->id, $this->search);
-  }
-
-  static function getTermActorEsResults($termId, $search = null)
-  {
-    $search = (!empty($search)) ? $search : new arElasticSearchPluginQuery();
-
-    $query = new \Elastica\Query\Term;
-    $query->setTerm('subjects.id', $termId);
-    $search->query->setQuery($search->queryBool->addMust($query));
-
-    return QubitSearch::getInstance()->index->getType('QubitActor')->search($search->getQuery(false));
+    return TermIndexAction::getEsResultsRelatedToTerm('QubitActor', $this->resource->id, $this->search);
   }
 
   public function execute($request)
@@ -148,15 +137,16 @@ class TermRelatedAuthoritiesAction extends DefaultBrowseAction
       $this->culture = $this->context->user->getCulture();
     }
 
-
-
-
-
     // Prepare filter tags, form, and hidden fields/values
     $this->populateFilterTags($request);
 
+    // Take note of number of related information objects
+    $resultSet = TermIndexAction::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource->id);
+    $this->relatedIoCount = $resultSet->count();
+
     // Perform search and paging
     $resultSet = $this->doSearch($request);
+    $this->relatedActorCount = $resultSet->count();
 
     $this->pager = new QubitSearchPager($resultSet);
     $this->pager->setPage($request->page ? $request->page : 1);

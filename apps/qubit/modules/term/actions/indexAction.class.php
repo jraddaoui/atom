@@ -146,6 +146,10 @@ class TermIndexAction extends DefaultBrowseAction
       }
     }
 
+    // Take note of number of related actors
+    $resultSet = self::getEsResultsRelatedToTerm('QubitActor', $this->resource->id);
+    $this->relatedActorCount = $resultSet->count();
+
     // Add browse elements for places and subjects and genres
     $this->addBrowseElements = ($this->resource->taxonomyId == QubitTaxonomy::PLACE_ID || $this->resource->taxonomyId == QubitTaxonomy::SUBJECT_ID || $this->resource->taxonomyId == QubitTaxonomy::GENRE_ID);
     if ($this->addBrowseElements)
@@ -303,6 +307,7 @@ EOF;
         $this->search->query->setQuery($this->search->queryBool);
 
         $resultSet = QubitSearch::getInstance()->index->getType('QubitInformationObject')->search($this->search->query);
+        $this->relatedIoCount = $resultSet->count();
 
         // Page results
         $this->pager = new QubitSearchPager($resultSet);
@@ -345,5 +350,24 @@ EOF;
     $this->listPager->setPage($request->listPage ? $request->listPage : 1);
     $this->listPager->setMaxPerPage($request->listLimit);
     $this->listPager->init();
+  }
+
+  static function getEsResultsRelatedToTerm($relatedModelClass, $termId, $search = null)
+  {
+    $term = QubitTerm::getById($termId);
+
+    $esFields = array(
+      QubitTaxonomy::PLACE_ID   => 'places.id',
+      QubitTaxonomy::SUBJECT_ID => 'subjects.id',
+      QubitTaxonomy::GENRE_ID   => 'genres.id'
+    );
+
+    $search = (!empty($search)) ? $search : new arElasticSearchPluginQuery();
+
+    $query = new \Elastica\Query\Term;
+    $query->setTerm($esFields[$term->taxonomyId], $termId);
+    $search->query->setQuery($search->queryBool->addMust($query));
+
+    return QubitSearch::getInstance()->index->getType($relatedModelClass)->search($search->getQuery(false));
   }
 }
