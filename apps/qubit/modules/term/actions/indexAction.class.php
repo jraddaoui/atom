@@ -146,10 +146,6 @@ class TermIndexAction extends DefaultBrowseAction
       }
     }
 
-    // Take note of number of related actors
-    $resultSet = self::getEsResultsRelatedToTerm('QubitActor', $this->resource->id);
-    $this->relatedActorCount = $resultSet->count();
-
     // Add browse elements for places and subjects and genres
     $this->addBrowseElements = ($this->resource->taxonomyId == QubitTaxonomy::PLACE_ID || $this->resource->taxonomyId == QubitTaxonomy::SUBJECT_ID || $this->resource->taxonomyId == QubitTaxonomy::GENRE_ID);
     if ($this->addBrowseElements)
