@@ -29,7 +29,7 @@ class TermNavigateRelatedComponent extends sfComponent
 
   public function execute($request)
   {
-    if (!isset(self::$TAXONOMY_ES_FIELD[$term->taxonomyId]))
+    if (!isset(self::$TAXONOMY_ES_FIELD[$this->resource->taxonomyId]))
     {
       return sfView::NONE;
     }
