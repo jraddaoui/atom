@@ -34,16 +34,12 @@ class TermNavigateRelatedComponent extends sfComponent
       return sfView::NONE;
     }
 
-    // Take note of number of related descriptions
-    $resultSet = self::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource);
-    $this->relatedIoCount = $resultSet->count();
-
-    // Take note of number of related actors
-    $resultSet = self::getEsResultsRelatedToTerm('QubitActor', $this->resource);
-    $this->relatedActorCount = $resultSet->count();
+    // Take note of counts of Elasticsearch documents related to term
+    $this->relatedIoCount    = self::getEsDocsRelatedToTermCount('QubitInformationObject', $this->resource);
+    $this->relatedActorCount = self::getEsDocsRelatedToTermCount('QubitActor', $this->resource);
   }
 
-  static function getEsResultsRelatedToTerm($relatedModelClass, $term, $search = null)
+  static function getEsDocsRelatedToTerm($relatedModelClass, $term, $search = null)
   {
     if (!isset(self::$TAXONOMY_ES_FIELD[$term->taxonomyId]))
     {
@@ -64,5 +60,12 @@ class TermNavigateRelatedComponent extends sfComponent
     }
 
     return QubitSearch::getInstance()->index->getType($relatedModelClass)->search($search->getQuery(false));
+  }
+
+  static function getEsDocsRelatedToTermCount($relatedModelClass, $term, $search = null)
+  {
+    $resultSet = self::getEsDocsRelatedToTerm($relatedModelClass, $term, $search);
+
+    return $resultSet->count();
   }
 }

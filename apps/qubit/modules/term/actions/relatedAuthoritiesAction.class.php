@@ -102,7 +102,7 @@ class TermRelatedAuthoritiesAction extends DefaultBrowseAction
   protected function doSearch($request)
   {
     $this->setSort($request);
-    return TermNavigateRelatedComponent::getEsResultsRelatedToTerm('QubitActor', $this->resource, $this->search);
+    return TermNavigateRelatedComponent::getEsDocsRelatedToTerm('QubitActor', $this->resource, $this->search);
   }
 
   public function execute($request)
@@ -141,7 +141,7 @@ class TermRelatedAuthoritiesAction extends DefaultBrowseAction
     $this->populateFilterTags($request);
 
     // Take note of number of related information objects
-    $resultSet = TermNavigateRelatedComponent::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource);
+    $resultSet = TermNavigateRelatedComponent::getEsDocsRelatedToTerm('QubitInformationObject', $this->resource);
     $this->relatedIoCount = $resultSet->count();
 
     // Perform search and paging
