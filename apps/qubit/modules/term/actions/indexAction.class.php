@@ -356,17 +356,30 @@ EOF;
   {
     $term = QubitTerm::getById($termId);
 
+    // Determine appropriate Elasticsearch field
     $esFields = array(
       QubitTaxonomy::PLACE_ID   => 'places.id',
       QubitTaxonomy::SUBJECT_ID => 'subjects.id',
       QubitTaxonomy::GENRE_ID   => 'genres.id'
     );
 
+    if (!isset($esFields[$term->taxonomyId]))
+    {
+      throw new sfException('Unsupported taxonomy.');
+    }
+
+    // Search for related resources
     $search = (!empty($search)) ? $search : new arElasticSearchPluginQuery();
 
     $query = new \Elastica\Query\Term;
     $query->setTerm($esFields[$term->taxonomyId], $termId);
     $search->query->setQuery($search->queryBool->addMust($query));
+
+    // Filter out drafts if querying descriptions
+    if ($relatedModelClass == 'QubitInformationObject')
+    {
+      QubitAclSearch::filterDrafts($search->queryBool);
+    }
 
     return QubitSearch::getInstance()->index->getType($relatedModelClass)->search($search->getQuery(false));
   }

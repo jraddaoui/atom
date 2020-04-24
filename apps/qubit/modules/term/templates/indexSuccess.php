@@ -16,16 +16,18 @@
 
   <h1><?php echo render_title($resource) ?></h1>
 
-  <?php if ($relatedActorCount): ?>
   <ul class="nav nav-tabs">
     <li class="nav-item active">
       <a class="nav-link" href="#"><?php echo __('Related Descriptions') . sprintf(' (%d)', $relatedIoCount) ?></a>
     </li>
     <li class="nav-item">
-      <?php echo link_to(__('Related Authorities') . sprintf(' (%d)', $relatedActorCount), array($resource, 'module' => 'term', 'action' => 'relatedAuthorities'), array('class' => 'nav-link')) ?>
+      <?php if ($relatedActorCount): ?>
+        <?php echo link_to(__('Related Authorities') . sprintf(' (%d)', $relatedActorCount), array($resource, 'module' => 'term', 'action' => 'relatedAuthorities'), array('class' => 'nav-link')) ?>
+      <?php else: ?>
+        <a class="nav-link" href="#"><?php echo __('Related Authorities') . sprintf(' (%d)', $relatedActorCount) ?></a>
+      <?php endif; ?>
     </li>
   </ul>
-  <?php endif; ?>
 
   <?php echo get_partial('term/errors', array('errorSchema' => $errorSchema)) ?>
 
