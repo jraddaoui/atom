@@ -19,8 +19,21 @@
 
 class TermNavigateRelatedComponent extends sfComponent
 {
+  // Arrays not allowed in class constants
+  public static
+    $TAXONOMY_ES_FIELD = array(
+      QubitTaxonomy::PLACE_ID   => 'places.id',
+      QubitTaxonomy::SUBJECT_ID => 'subjects.id',
+      QubitTaxonomy::GENRE_ID   => 'genres.id'
+    );
+
   public function execute($request)
   {
+    if (!isset(self::$TAXONOMY_ES_FIELD[$term->taxonomyId]))
+    {
+      return sfView::NONE;
+    }
+
     // Take note of number of related descriptions
     $resultSet = self::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource->id);
     $this->relatedIoCount = $resultSet->count();
@@ -34,14 +47,7 @@ class TermNavigateRelatedComponent extends sfComponent
   {
     $term = QubitTerm::getById($termId);
 
-    // Determine appropriate Elasticsearch field
-    $esFields = array(
-      QubitTaxonomy::PLACE_ID   => 'places.id',
-      QubitTaxonomy::SUBJECT_ID => 'subjects.id',
-      QubitTaxonomy::GENRE_ID   => 'genres.id'
-    );
-
-    if (!isset($esFields[$term->taxonomyId]))
+    if (!isset(self::$TAXONOMY_ES_FIELD[$term->taxonomyId]))
     {
       throw new sfException('Unsupported taxonomy.');
     }
@@ -50,7 +56,7 @@ class TermNavigateRelatedComponent extends sfComponent
     $search = (!empty($search)) ? $search : new arElasticSearchPluginQuery();
 
     $query = new \Elastica\Query\Term;
-    $query->setTerm($esFields[$term->taxonomyId], $termId);
+    $query->setTerm(self::$TAXONOMY_ES_FIELD[$term->taxonomyId], $termId);
     $search->query->setQuery($search->queryBool->addMust($query));
 
     // Filter out drafts if querying descriptions
