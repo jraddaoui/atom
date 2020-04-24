@@ -16,18 +16,7 @@
 
   <h1><?php echo render_title($resource) ?></h1>
 
-  <ul class="nav nav-tabs">
-    <li class="nav-item active">
-      <a class="nav-link" href="#"><?php echo __('Related Descriptions') . sprintf(' (%d)', $relatedIoCount) ?></a>
-    </li>
-    <li class="nav-item">
-      <?php if ($relatedActorCount): ?>
-        <?php echo link_to(__('Related Authorities') . sprintf(' (%d)', $relatedActorCount), array($resource, 'module' => 'term', 'action' => 'relatedAuthorities'), array('class' => 'nav-link')) ?>
-      <?php else: ?>
-        <a class="nav-link" href="#"><?php echo __('Related Authorities') . sprintf(' (%d)', $relatedActorCount) ?></a>
-      <?php endif; ?>
-    </li>
-  </ul>
+  <?php echo get_component('term', 'navigateRelated', array('resource' => $resource)) ?>
 
   <?php echo get_partial('term/errors', array('errorSchema' => $errorSchema)) ?>
 
