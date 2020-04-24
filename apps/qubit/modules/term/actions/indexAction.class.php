@@ -303,7 +303,6 @@ EOF;
         $this->search->query->setQuery($this->search->queryBool);
 
         $resultSet = QubitSearch::getInstance()->index->getType('QubitInformationObject')->search($this->search->query);
-        $this->relatedIoCount = $resultSet->count();
 
         // Page results
         $this->pager = new QubitSearchPager($resultSet);
