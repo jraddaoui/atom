@@ -35,18 +35,16 @@ class TermNavigateRelatedComponent extends sfComponent
     }
 
     // Take note of number of related descriptions
-    $resultSet = self::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource->id);
+    $resultSet = self::getEsResultsRelatedToTerm('QubitInformationObject', $this->resource);
     $this->relatedIoCount = $resultSet->count();
 
     // Take note of number of related actors
-    $resultSet = self::getEsResultsRelatedToTerm('QubitActor', $this->resource->id);
+    $resultSet = self::getEsResultsRelatedToTerm('QubitActor', $this->resource);
     $this->relatedActorCount = $resultSet->count();
   }
 
-  static function getEsResultsRelatedToTerm($relatedModelClass, $termId, $search = null)
+  static function getEsResultsRelatedToTerm($relatedModelClass, $term, $search = null)
   {
-    $term = QubitTerm::getById($termId);
-
     if (!isset(self::$TAXONOMY_ES_FIELD[$term->taxonomyId]))
     {
       throw new sfException('Unsupported taxonomy.');
@@ -56,7 +54,7 @@ class TermNavigateRelatedComponent extends sfComponent
     $search = (!empty($search)) ? $search : new arElasticSearchPluginQuery();
 
     $query = new \Elastica\Query\Term;
-    $query->setTerm(self::$TAXONOMY_ES_FIELD[$term->taxonomyId], $termId);
+    $query->setTerm(self::$TAXONOMY_ES_FIELD[$term->taxonomyId], $term->id);
     $search->query->setQuery($search->queryBool->addMust($query));
 
     // Filter out drafts if querying descriptions
