@@ -1,5 +1,4 @@
 <section class="actions">
-
   <ul>
 
     <?php if ((QubitAcl::check($resource, 'update') || QubitAcl::check($resource, 'translate')) && !QubitTerm::isProtected($resource->id)): ?>
@@ -15,5 +14,4 @@
     <?php endif; ?>
 
   </ul>
-
 </section>
