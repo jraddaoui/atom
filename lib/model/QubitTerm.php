@@ -766,24 +766,6 @@ class QubitTerm extends BaseTerm
   }
 
   /**
-   * Get a count of related actors
-   *
-   * @param integer  ID of term
-   * @return integer  count of related actors
-   */
-  public static function countRelatedActors($id)
-  {
-    $criteria = new Criteria;
-    $criteria->add(QubitTerm::ID, $id);
-
-    $criteria->addJoin(QubitTerm::ID, QubitObject::ID);
-    $criteria->addJoin(QubitTerm::ID, QubitObjectTermRelation::TERM_ID);
-    $criteria->addJoin(QubitObjectTermRelation::OBJECT_ID, QubitActor::ID);
-
-    return BasePeer::doCount($criteria)->fetchColumn(0);
-  }
-
-  /**
    * Get a basic key['id']/value['name'] array for use as options in form
    * select lists
    *
