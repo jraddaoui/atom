@@ -105,7 +105,7 @@
             <td><?php echo QubitTerm::countRelatedInformationObjects($hit->getId()) ?></td>
           <?php endif; ?>
           <?php if ($addAuthorityResultsColumn): ?>
-            <td><?php echo QubitTerm::countRelatedActors($hit->getId()) ?></td>
+            <td><?php echo TermNavigateRelatedComponent::getEsDocsRelatedToTermCount('QubitActor', $hit->getId()) ?></td>
           <?php endif; ?>
         </tr>
       <?php endforeach; ?>
