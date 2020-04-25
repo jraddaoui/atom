@@ -21,7 +21,8 @@
   <?php echo get_partial('term/errors', array('errorSchema' => $errorSchema)) ?>
 
   <?php if (QubitTerm::ROOT_ID != $resource->parentId): ?>
-    <?php echo include_partial('default/breadcrumb', array('resource' => $resource, 'objects' => $resource->getAncestors()->andSelf()->orderBy('lft'))) ?>
+    <?php echo include_partial('default/breadcrumb',
+                 array('resource' => $resource, 'objects' => $resource->getAncestors()->andSelf()->orderBy('lft'))) ?>
   <?php endif; ?>
 
 <?php end_slot() ?>
@@ -48,7 +49,8 @@
 
   <?php echo get_partial('term/actions', array('resource' => $resource)) ?>
 
-  <h1><?php echo __('%1% %2% results for %3%', array('%1%' => $pager->getNbResults(), '%2%' => sfConfig::get('app_ui_label_actor'), '%3%' => render_title($resource))) ?></h1>
+  <h1><?php echo __('%1% %2% results for %3%',
+                   array('%1%' => $pager->getNbResults(), '%2%' => sfConfig::get('app_ui_label_actor'), '%3%' => render_title($resource))) ?></h1>
 
   <section class="header-options">
     <!-- TODO: onlyDirect support? -->

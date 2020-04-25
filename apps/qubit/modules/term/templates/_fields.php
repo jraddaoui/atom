@@ -53,7 +53,9 @@
   <div>
 
     <?php if (QubitTerm::ROOT_ID != $resource->parent->id): ?>
-      <?php echo render_show(render_title($resource), __('BT %1%', array('%1%' => link_to(render_title($resource->parent), array($resource->parent, 'module' => 'term'))))) ?>
+      <?php echo render_show(
+                   render_title($resource), __('BT %1%', array(
+                     '%1%' => link_to(render_title($resource->parent), array($resource->parent, 'module' => 'term'))))) ?>
     <?php endif; ?>
 
     <div class="field">
@@ -92,7 +94,8 @@
 </div>
 
 <?php if (0 < count($converseTerms = QubitRelation::getBySubjectOrObjectId($resource->id, array('typeId' => QubitTerm::CONVERSE_TERM_ID)))): ?>
-  <?php echo render_show(__('Converse term'), link_to(render_title($converseTerms[0]->getOpposedObject($resource)), array($converseTerms[0]->getOpposedObject($resource), 'module' => 'term'))) ?>
+  <?php echo render_show(__('Converse term'), link_to(render_title(
+               $converseTerms[0]->getOpposedObject($resource)), array($converseTerms[0]->getOpposedObject($resource), 'module' => 'term'))) ?>
 <?php endif; ?>
 
 <div class="field">
@@ -104,7 +107,8 @@
       <div>
         <ul>
           <?php foreach (QubitRelation::getBySubjectOrObjectId($resource->id, array('typeId' => QubitTerm::TERM_RELATION_ASSOCIATIVE_ID)) as $item): ?>
-            <li><?php echo __('RT %1%', array('%1%' => link_to(render_title($item->getOpposedObject($resource->id)), array($item->getOpposedObject($resource->id), 'module' => 'term')))) ?></li>
+            <li><?php echo __('RT %1%', array('%1%' => link_to(render_title(
+                        $item->getOpposedObject($resource->id)), array($item->getOpposedObject($resource->id), 'module' => 'term')))) ?></li>
           <?php endforeach; ?>
         </ul>
       </div>
