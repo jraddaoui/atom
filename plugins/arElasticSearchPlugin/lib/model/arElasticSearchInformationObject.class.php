@@ -137,12 +137,11 @@ class arElasticSearchInformationObject extends arElasticSearchModelBase
 
     // Update asynchronously in other environments
     $jobOptions = array(
-      'ids' => array($object->id),
-      'modelClass' => 'QubitInformationObject',
-      'updateResource' => false,
+      'ioIds' => array($object->id),
+      'updateIos' => false,
       'updateDescendants' => true
     );
-    QubitJob::runJob('arUpdateEsDocumentsJob', $jobOptions);
+    QubitJob::runJob('arUpdateEsIoDocumentsJob', $jobOptions);
 
     // Let user know descendants update has started
     $jobsUrl = $context->routing->generate(null, array('module' => 'jobs', 'action' => 'browse'));
