@@ -265,7 +265,7 @@ class arElasticSearchActorPdo
     // Related objects
     if (count($relations = $this->serializeObjectRelations()))
     {
-      $serialized['relations'] = $relations;
+      $serialized['actorRelations'] = $relations;
     }
 
     // Places
@@ -359,21 +359,17 @@ class arElasticSearchActorPdo
   {
     $relations = array();
 
-    $sql = "SELECT r.type_id, r.object_id, r.subject_id, oo.class_name \r
-              AS object_class, so.class_name AS subject_class \r
-              FROM ".QubitRelation::TABLE_NAME." r \r
-              INNER JOIN ".QubitObject::TABLE_NAME." oo ON r.object_id=oo.id \r
-              INNER JOIN ".QubitObject::TABLE_NAME." so ON r.subject_id=so.id \r
-              WHERE r.object_id=? OR r.subject_id=?";
+    $sql = "SELECT r.object_id, r.subject_id
+             FROM ".QubitRelation::TABLE_NAME." r
+             INNER JOIN ".QubitTerm::TABLE_NAME." t ON r.type_id=t.id
+             WHERE t.taxonomy_id=".QubitTaxonomy::ACTOR_RELATION_TYPE_ID."
+             AND object_id=? OR r.subject_id=?";
 
     foreach (QubitPdo::fetchAll($sql, array($this->id, $this->id)) as $relation)
     {
       array_push($relations, array(
-        'typeId'       => $relation->type_id,
         'objectId'     => $relation->object_id,
-        'objectClass'  => $relation->object_class,
-        'subjectId'    => $relation->subject_id,
-        'subjectClass' => $relation->subject_class
+        'subjectId'    => $relation->subject_id
       ));
     }
 

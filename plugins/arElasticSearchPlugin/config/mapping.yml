@@ -72,9 +72,9 @@ mapping:
     properties:
       type_id: { type: integer, include_in_all: false }
       object_id: { type: integer, include_in_all: false }
-      object_class: { type: keyword, include_in_all: false }
+      #object_class: { type: keyword, include_in_all: false }
       subject_id: { type: integer, include_in_all: false }
-      subject_class: { type: keyword, include_in_all: false }
+      #subject_class: { type: keyword, include_in_all: false }
 
   donor:
     _attributes:
@@ -350,7 +350,7 @@ mapping:
       standardized_names: other_name
       subjects: term
       places: term
-      relations: relation
+      actor_relations: relation
     _partial_foreign_types:
       occupations:
         _i18nFields: [name, content]
