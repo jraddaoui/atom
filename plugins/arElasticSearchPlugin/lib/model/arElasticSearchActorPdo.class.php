@@ -263,7 +263,7 @@ class arElasticSearchActorPdo
     );
 
     // Related objects
-    if (!empty($relations = $this->serializeObjectRelations()))
+    if (!empty($relations = self::serializeObjectRelations($this->id)))
     {
       $serialized['actorRelations'] = $relations;
     }
@@ -355,7 +355,7 @@ class arElasticSearchActorPdo
     return $serialized;
   }
 
-  public function serializeObjectRelations()
+  static public function serializeObjectRelations($actorId)
   {
     $relations = array();
 
@@ -365,7 +365,7 @@ class arElasticSearchActorPdo
              WHERE t.taxonomy_id=".QubitTaxonomy::ACTOR_RELATION_TYPE_ID."
              AND object_id=? OR r.subject_id=?";
 
-    foreach (QubitPdo::fetchAll($sql, array($this->id, $this->id), array('fetchMode' => PDO::FETCH_ASSOC)) as $relation)
+    foreach (QubitPdo::fetchAll($sql, array($actorId, $actorId), array('fetchMode' => PDO::FETCH_ASSOC)) as $relation)
     {
       array_push($relations, array(
         'objectId'     => $relation['object_id'],
