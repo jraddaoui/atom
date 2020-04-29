@@ -576,6 +576,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     if (!empty($this->request->relatedAuthority))
     {
       $params = $this->context->routing->parse(Qubit::pathInfo($this->request->relatedAuthority));
+
       return $params['_sf_route']->resource;
     }
   }
