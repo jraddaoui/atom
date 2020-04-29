@@ -359,7 +359,7 @@ class arElasticSearchActorPdo
   {
     $relations = array();
 
-    $sql = "SELECT r.object_id, r.subject_id
+    $sql = "SELECT r.object_id, r.subject_id, r.type_id
              FROM ".QubitRelation::TABLE_NAME." r
              INNER JOIN ".QubitTerm::TABLE_NAME." t ON r.type_id=t.id
              WHERE t.taxonomy_id=".QubitTaxonomy::ACTOR_RELATION_TYPE_ID."
@@ -369,7 +369,8 @@ class arElasticSearchActorPdo
     {
       array_push($relations, array(
         'objectId'     => $relation['object_id'],
-        'subjectId'    => $relation['subject_id']
+        'subjectId'    => $relation['subject_id'],
+        'typeId'       => $relation['type_id']
       ));
     }
 

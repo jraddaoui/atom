@@ -370,29 +370,18 @@ class ActorBrowseAction extends DefaultBrowseAction
         $queryRelatedBool = new \Elastica\Query\BoolQuery;
 
         $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('relations.objectId', $actor->id);
+        $queryField->setTerm('actorRelations.objectId', $actor->id);
         $queryRelatedBool->addShould($queryField);
 
         $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('relations.subjectId', $actor->id);
+        $queryField->setTerm('actorRelations.subjectId', $actor->id);
         $queryRelatedBool->addShould($queryField);
 
         $queryBool->addMust($queryRelatedBool);
 
-        // Result relations must be between two actors
-/*
-        $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('relations.objectClass', 'QubitActor');
-        $queryBool->addMust($queryField);
-
-        $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('relations.subjectClass', 'QubitActor');
-        $queryBool->addMust($queryField);
-*/
-
         // Filter by nested relations
         $queryNested = new \Elastica\Query\Nested();
-        $queryNested->setPath('relations');
+        $queryNested->setPath('actorRelations');
         $queryNested->setQuery($queryBool);
 
         $this->search->queryBool->addMust($queryNested);
@@ -415,7 +404,7 @@ class ActorBrowseAction extends DefaultBrowseAction
       $queryTypeBool = new \Elastica\Query\BoolQuery;
 
       $queryField = new \Elastica\Query\Term;
-      $queryField->setTerm('relations.typeId', $this->request->relatedType);
+      $queryField->setTerm('actorRelations.typeId', $this->request->relatedType);
       $queryTypeBool->addShould($queryField);
 
       $converseTerms = QubitRelation::getBySubjectOrObjectId(
@@ -429,27 +418,16 @@ class ActorBrowseAction extends DefaultBrowseAction
         if ($this->request->relatedType != $converseTypeTerm->id)
         {
           $queryField = new \Elastica\Query\Term;
-          $queryField->setTerm('relations.typeId', $converseTypeTerm->id);
+          $queryField->setTerm('actorRelations.typeId', $converseTypeTerm->id);
           $queryTypeBool->addShould($queryField);
         }
       }
 
       $queryBool->addMust($queryTypeBool);
 
-      // Result relations must be between two actors
-/*
-      $queryField = new \Elastica\Query\Term;
-      $queryField->setTerm('relations.objectClass', 'QubitActor');
-      $queryBool->addMust($queryField);
-
-      $queryField = new \Elastica\Query\Term;
-      $queryField->setTerm('relations.subjectClass', 'QubitActor');
-      $queryBool->addMust($queryField);
-*/
-
       // Filter by nested relations
       $queryNested = new \Elastica\Query\Nested();
-      $queryNested->setPath('relations');
+      $queryNested->setPath('actorRelations');
       $queryNested->setQuery($queryBool);
 
       $this->search->queryBool->addMust($queryNested);

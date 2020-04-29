@@ -70,11 +70,9 @@ mapping:
     dynamic: strict
     type: nested
     properties:
-      type_id: { type: integer, include_in_all: false }
       object_id: { type: integer, include_in_all: false }
-      #object_class: { type: keyword, include_in_all: false }
       subject_id: { type: integer, include_in_all: false }
-      #subject_class: { type: keyword, include_in_all: false }
+      type_id: { type: integer, include_in_all: false }
 
   donor:
     _attributes:
