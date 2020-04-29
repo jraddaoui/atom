@@ -380,6 +380,7 @@ class ActorBrowseAction extends DefaultBrowseAction
         $queryBool->addMust($queryRelatedBool);
 
         // Result relations must be between two actors
+/*
         $queryField = new \Elastica\Query\Term;
         $queryField->setTerm('relations.objectClass', 'QubitActor');
         $queryBool->addMust($queryField);
@@ -387,6 +388,7 @@ class ActorBrowseAction extends DefaultBrowseAction
         $queryField = new \Elastica\Query\Term;
         $queryField->setTerm('relations.subjectClass', 'QubitActor');
         $queryBool->addMust($queryField);
+*/
 
         // Filter by nested relations
         $queryNested = new \Elastica\Query\Nested();
@@ -435,6 +437,7 @@ class ActorBrowseAction extends DefaultBrowseAction
       $queryBool->addMust($queryTypeBool);
 
       // Result relations must be between two actors
+/*
       $queryField = new \Elastica\Query\Term;
       $queryField->setTerm('relations.objectClass', 'QubitActor');
       $queryBool->addMust($queryField);
@@ -442,6 +445,7 @@ class ActorBrowseAction extends DefaultBrowseAction
       $queryField = new \Elastica\Query\Term;
       $queryField->setTerm('relations.subjectClass', 'QubitActor');
       $queryBool->addMust($queryField);
+*/
 
       // Filter by nested relations
       $queryNested = new \Elastica\Query\Nested();
