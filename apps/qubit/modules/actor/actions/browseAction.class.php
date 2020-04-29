@@ -336,7 +336,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     );
 
     // These get relayed as form field default values
-    $ignored = array('repository', 'entityType', 'relatedType');
+    $ignored = array('repository', 'entityType', 'relatedType', 'relatedAuthority');
 
     $this->setHiddenFields($request, $allowed, $ignored);
   }
