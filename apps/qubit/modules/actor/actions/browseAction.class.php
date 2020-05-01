@@ -205,9 +205,8 @@ class ActorBrowseAction extends DefaultBrowseAction
 
       case 'relatedAuthority':
         $defaultChoices = array();
-        if (!empty($request->$name))
+        if (!empty($request->$name) && !empty($actor = $this->getRelatedAuthority()))
         {
-          $actor = $this->getRelatedAuthority();
           $defaultChoices = array($request->$name => $actor->getAuthorizedFormOfName(array('cultureFallback' => true)));
         }
 
@@ -356,19 +355,16 @@ class ActorBrowseAction extends DefaultBrowseAction
       $this->search->queryBool->addMust($queryField);
     }
 
-    // Parse actor from route, if a related actor has been specified
-    $actor = (empty($request->relatedAuthority)) ? null : $this->getRelatedAuthority();
+    // Parse actor ID from route (if a related actor has been specified)
+    $actor = $this->getRelatedAuthority();
 
-    if (!empty($request->relatedAuthority) && !empty($request->relatedType))
+    if (!empty($actor) && !empty($request->relatedType))
     {
-      // Include actors that relate to the specified actor and are of the specified relation type
+      // Include actors that relate to the specified actor and have a relation
+      // of the specified type
       $queryBool = new \Elastica\Query\BoolQuery;
 
-      if (!empty($actor->id))
-      {
-        $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
-      }
-
+      $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
       $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
 
       $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
@@ -376,20 +372,25 @@ class ActorBrowseAction extends DefaultBrowseAction
       // Omit the specified actor
       $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
     }
-    else if (!empty($this->request->relatedAuthority) && !empty($actor->id))
+    else if (!empty($actor))
     {
       // Include actors that relate to the specified actor
       $queryBool = new \Elastica\Query\BoolQuery;
+
       $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
+
       $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
 
-      // Omit the specified actor itself
+      // Omit the specified actor
       $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
     }
     else if (!empty($this->request->relatedType))
     {
+      // Include actors with a relation of a specified type
       $queryBool = new \Elastica\Query\BoolQuery;
+
       $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
+
       $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
     }
 
