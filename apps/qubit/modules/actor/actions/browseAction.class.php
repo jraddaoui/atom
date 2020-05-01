@@ -356,81 +356,41 @@ class ActorBrowseAction extends DefaultBrowseAction
       $this->search->queryBool->addMust($queryField);
     }
 
-    // Filter by relations to a specific actor
-    if (isset($this->request->relatedAuthority))
+    // Parse actor from route, if a related actor has been specified
+    $actor = (empty($request->relatedAuthority)) ? null : $this->getRelatedAuthority();
+
+    if (!empty($request->relatedAuthority) && !empty($request->relatedType))
     {
-      // Parse actor from route
-      $actor = $this->getRelatedAuthority();
+      // Include actors that relate to the specified actor and are of the specified relation type
+      $queryBool = new \Elastica\Query\BoolQuery;
 
       if (!empty($actor->id))
       {
-        $queryBool = new \Elastica\Query\BoolQuery;
-
-        // Result relations must have either a related object or subject ID
-        $queryRelatedBool = new \Elastica\Query\BoolQuery;
-
-        $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('actorRelations.objectId', $actor->id);
-        $queryRelatedBool->addShould($queryField);
-
-        $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('actorRelations.subjectId', $actor->id);
-        $queryRelatedBool->addShould($queryField);
-
-        $queryBool->addMust($queryRelatedBool);
-
-        // Filter by nested relations
-        $queryNested = new \Elastica\Query\Nested();
-        $queryNested->setPath('actorRelations');
-        $queryNested->setQuery($queryBool);
-
-        $this->search->queryBool->addMust($queryNested);
-
-        // Omit the actor that the others are related to
-        $queryField = new \Elastica\Query\Term;
-        $queryField->setTerm('_id', $actor->id);
-        $queryBool->addMustNot($queryField);
-
-        $this->search->queryBool->addMust($queryNested);
+        $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
       }
-    }
 
-    // Fiter by relation type
-    if ($this->request->relatedType)
+      $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
+
+      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
+
+      // Omit the specified actor
+      $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
+    }
+    else if (!empty($this->request->relatedAuthority) && !empty($actor->id))
+    {
+      // Include actors that relate to the specified actor
+      $queryBool = new \Elastica\Query\BoolQuery;
+      $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
+      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
+
+      // Omit the specified actor itself
+      $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
+    }
+    else if (!empty($this->request->relatedType))
     {
       $queryBool = new \Elastica\Query\BoolQuery;
-
-      // Result relations must have either the specified type or its converse
-      $queryTypeBool = new \Elastica\Query\BoolQuery;
-
-      $queryField = new \Elastica\Query\Term;
-      $queryField->setTerm('actorRelations.typeId', $this->request->relatedType);
-      $queryTypeBool->addShould($queryField);
-
-      $converseTerms = QubitRelation::getBySubjectOrObjectId(
-        $this->request->relatedType, array('typeId' => QubitTerm::CONVERSE_TERM_ID)
-      );
-
-      if (count($converseTerms))
-      {
-        $converseTypeTerm = $converseTerms[0]->getOpposedObject($this->request->relatedType);
-
-        if ($this->request->relatedType != $converseTypeTerm->id)
-        {
-          $queryField = new \Elastica\Query\Term;
-          $queryField->setTerm('actorRelations.typeId', $converseTypeTerm->id);
-          $queryTypeBool->addShould($queryField);
-        }
-      }
-
-      $queryBool->addMust($queryTypeBool);
-
-      // Filter by nested relations
-      $queryNested = new \Elastica\Query\Nested();
-      $queryNested->setPath('actorRelations');
-      $queryNested->setQuery($queryBool);
-
-      $this->search->queryBool->addMust($queryNested);
+      $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
+      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
     }
 
     // Filter out results if a specific field isn't empty
@@ -445,6 +405,71 @@ class ActorBrowseAction extends DefaultBrowseAction
     $this->search->query->setQuery($this->search->queryBool);
 
     return QubitSearch::getInstance()->index->getType('QubitActor')->search($this->search->getQuery(false));
+  }
+
+  private function actorRelationsQueryForActorId($actorId)
+  {
+    // Result relations must have either a related object or subject ID
+    $queryRelatedBool = new \Elastica\Query\BoolQuery;
+
+    $queryField = new \Elastica\Query\Term;
+    $queryField->setTerm('actorRelations.objectId', $actorId);
+    $queryRelatedBool->addShould($queryField);
+
+    $queryField = new \Elastica\Query\Term;
+    $queryField->setTerm('actorRelations.subjectId', $actorId);
+    $queryRelatedBool->addShould($queryField);
+
+    return $queryRelatedBool;
+  }
+
+  private function queryToExcludeActorId($actorId)
+  {
+    // Omit the actor that the others are related to
+    $queryBool = new \Elastica\Query\BoolQuery;
+
+    $queryField = new \Elastica\Query\Term;
+    $queryField->setTerm('_id', $actorId);
+    $queryBool->addMustNot($queryField);
+
+    return $queryBool;
+  }
+
+  private function actorRelationsTypeQuery($typeId)
+  {
+    // Result relations must have either the specified type or its converse
+    $queryTypeBool = new \Elastica\Query\BoolQuery;
+
+    $queryField = new \Elastica\Query\Term;
+    $queryField->setTerm('actorRelations.typeId', $typeId);
+    $queryTypeBool->addShould($queryField);
+
+    $converseTerms = QubitRelation::getBySubjectOrObjectId(
+      $this->request->relatedType, array('typeId' => QubitTerm::CONVERSE_TERM_ID)
+    );
+
+    if (count($converseTerms))
+    {
+      $converseTypeTerm = $converseTerms[0]->getOpposedObject($typeId);
+
+      if ($this->request->relatedType != $converseTypeTerm->id)
+      {
+        $queryField = new \Elastica\Query\Term;
+        $queryField->setTerm('actorRelations.typeId', $converseTypeTerm->id);
+        $queryTypeBool->addShould($queryField);
+      }
+    }
+
+    return $queryTypeBool;
+  }
+
+  private function actorRelationsNestedSetQuery($query)
+  {
+    $queryNested = new \Elastica\Query\Nested();
+    $queryNested->setPath('actorRelations');
+    $queryNested->setQuery($query);
+
+    return $queryNested;
   }
 
   /**
