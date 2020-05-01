@@ -367,7 +367,7 @@ class ActorBrowseAction extends DefaultBrowseAction
       $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
       $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
 
-      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
+      $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
 
       // Omit the specified actor
       $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
@@ -379,7 +379,7 @@ class ActorBrowseAction extends DefaultBrowseAction
 
       $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
 
-      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
+      $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
 
       // Omit the specified actor
       $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
@@ -391,7 +391,7 @@ class ActorBrowseAction extends DefaultBrowseAction
 
       $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
 
-      $this->search->queryBool->addMust($this->actorRelationsNestedSetQuery($queryBool));
+      $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
     }
 
     // Filter out results if a specific field isn't empty
@@ -464,7 +464,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     return $queryTypeBool;
   }
 
-  private function actorRelationsNestedSetQuery($query)
+  private function actorRelationsNestedQuery($query)
   {
     $queryNested = new \Elastica\Query\Nested();
     $queryNested->setPath('actorRelations');
