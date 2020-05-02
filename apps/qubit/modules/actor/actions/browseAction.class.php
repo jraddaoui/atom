@@ -205,7 +205,7 @@ class ActorBrowseAction extends DefaultBrowseAction
 
       case 'relatedAuthority':
         $defaultChoices = array();
-        if (!empty($request->$name) && !empty($actor = $this->getRelatedAuthority($this->request->relatedAuthority)))
+        if (!empty($request->$name) && !empty($actor = $this->getRelatedAuthorityUsingSlug($this->request->relatedAuthority)))
         {
           $defaultChoices = array($request->$name => $actor->getAuthorizedFormOfName(array('cultureFallback' => true)));
         }
@@ -340,6 +340,16 @@ class ActorBrowseAction extends DefaultBrowseAction
     $this->setHiddenFields($request, $allowed, $ignored);
   }
 
+  private function getRelatedAuthorityUsingSlug($relatedAuthority)
+  {
+    if (!empty($relatedAuthority))
+    {
+      $params = $this->context->routing->parse(Qubit::pathInfo($relatedAuthority));
+
+      return (get_class($params['_sf_route']->resource) == 'QubitActor') ? $params['_sf_route']->resource : null;
+    }
+  }
+
   protected function doSearch($request)
   {
     $this->setSort($request);
@@ -356,7 +366,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     }
 
     // Parse actor ID from route (if a related actor has been specified)
-    $actor = $this->getRelatedAuthority($this->request->relatedAuthority);
+    $actor = $this->getRelatedAuthorityUsingSlug($this->request->relatedAuthority);
 
     if (!empty($actor) && !empty($request->relatedType))
     {
@@ -424,18 +434,6 @@ class ActorBrowseAction extends DefaultBrowseAction
     return $queryRelatedBool;
   }
 
-  private function actorExcludeQuery($actorId)
-  {
-    // Omit the actor that the others are related to
-    $queryBool = new \Elastica\Query\BoolQuery;
-
-    $queryField = new \Elastica\Query\Term;
-    $queryField->setTerm('_id', $actorId);
-    $queryBool->addMustNot($queryField);
-
-    return $queryBool;
-  }
-
   private function actorRelationsQueryForType($typeId)
   {
     // Result relations must have either the specified type or its converse
@@ -471,6 +469,18 @@ class ActorBrowseAction extends DefaultBrowseAction
     $queryNested->setQuery($query);
 
     return $queryNested;
+  }
+
+  private function actorExcludeQuery($actorId)
+  {
+    // Omit the actor that the others are related to
+    $queryBool = new \Elastica\Query\BoolQuery;
+
+    $queryField = new \Elastica\Query\Term;
+    $queryField->setTerm('_id', $actorId);
+    $queryBool->addMustNot($queryField);
+
+    return $queryBool;
   }
 
   /**
@@ -576,16 +586,6 @@ class ActorBrowseAction extends DefaultBrowseAction
     if (!isset($request->subquery) && isset($request->sq0) && !isset($request->sf0))
     {
       $request->subquery = $request->sq0;
-    }
-  }
-
-  private function getRelatedAuthority($relatedAuthority)
-  {
-    if (!empty($relatedAuthority))
-    {
-      $params = $this->context->routing->parse(Qubit::pathInfo($relatedAuthority));
-
-      return (get_class($params['_sf_route']->resource) == 'QubitActor') ? $params['_sf_route']->resource : null;
     }
   }
 }
