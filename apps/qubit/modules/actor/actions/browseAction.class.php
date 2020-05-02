@@ -205,7 +205,7 @@ class ActorBrowseAction extends DefaultBrowseAction
 
       case 'relatedAuthority':
         $defaultChoices = array();
-        if (!empty($request->$name) && !empty($actor = $this->getRelatedAuthority()))
+        if (!empty($request->$name) && !empty($actor = $this->getRelatedAuthority($this->request->relatedAuthority)))
         {
           $defaultChoices = array($request->$name => $actor->getAuthorizedFormOfName(array('cultureFallback' => true)));
         }
@@ -356,7 +356,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     }
 
     // Parse actor ID from route (if a related actor has been specified)
-    $actor = $this->getRelatedAuthority();
+    $actor = $this->getRelatedAuthority($this->request->relatedAuthority);
 
     if (!empty($actor) && !empty($request->relatedType))
     {
@@ -579,13 +579,13 @@ class ActorBrowseAction extends DefaultBrowseAction
     }
   }
 
-  private function getRelatedAuthority()
+  private function getRelatedAuthority($relatedAuthority)
   {
-    if (!empty($this->request->relatedAuthority))
+    if (!empty($relatedAuthority))
     {
-      $params = $this->context->routing->parse(Qubit::pathInfo($this->request->relatedAuthority));
+      $params = $this->context->routing->parse(Qubit::pathInfo($relatedAuthority));
 
-      return $params['_sf_route']->resource;
+      return (get_class($params['_sf_route']->resource) == 'QubitActor') ? $params['_sf_route']->resource : null;
     }
   }
 }
