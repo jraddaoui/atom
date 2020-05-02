@@ -364,32 +364,32 @@ class ActorBrowseAction extends DefaultBrowseAction
       // of the specified type
       $queryBool = new \Elastica\Query\BoolQuery;
 
-      $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
-      $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
+      $queryBool->addMust($this->actorRelationsQueryForActor($actor->id));
+      $queryBool->addMust($this->actorRelationsQueryForType($this->request->relatedType));
 
       $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
 
       // Omit the specified actor
-      $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
+      $this->search->queryBool->addMust($this->actorExcludeQuery($actor->id));
     }
     else if (!empty($actor))
     {
       // Include actors that relate to the specified actor
       $queryBool = new \Elastica\Query\BoolQuery;
 
-      $queryBool->addMust($this->actorRelationsQueryForActorId($actor->id));
+      $queryBool->addMust($this->actorRelationsQueryForActor($actor->id));
 
       $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
 
       // Omit the specified actor
-      $this->search->queryBool->addMust($this->queryToExcludeActorId($actor->id));
+      $this->search->queryBool->addMust($this->actorExcludeQuery($actor->id));
     }
     else if (!empty($this->request->relatedType))
     {
       // Include actors with a relation of a specified type
       $queryBool = new \Elastica\Query\BoolQuery;
 
-      $queryBool->addMust($this->actorRelationsTypeQuery($this->request->relatedType));
+      $queryBool->addMust($this->actorRelationsQueryForType($this->request->relatedType));
 
       $this->search->queryBool->addMust($this->actorRelationsNestedQuery($queryBool));
     }
@@ -408,7 +408,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     return QubitSearch::getInstance()->index->getType('QubitActor')->search($this->search->getQuery(false));
   }
 
-  private function actorRelationsQueryForActorId($actorId)
+  private function actorRelationsQueryForActor($actorId)
   {
     // Result relations must have either a related object or subject ID
     $queryRelatedBool = new \Elastica\Query\BoolQuery;
@@ -424,7 +424,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     return $queryRelatedBool;
   }
 
-  private function queryToExcludeActorId($actorId)
+  private function actorExcludeQuery($actorId)
   {
     // Omit the actor that the others are related to
     $queryBool = new \Elastica\Query\BoolQuery;
@@ -436,7 +436,7 @@ class ActorBrowseAction extends DefaultBrowseAction
     return $queryBool;
   }
 
-  private function actorRelationsTypeQuery($typeId)
+  private function actorRelationsQueryForType($typeId)
   {
     // Result relations must have either the specified type or its converse
     $queryTypeBool = new \Elastica\Query\BoolQuery;
