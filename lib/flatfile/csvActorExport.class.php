@@ -61,24 +61,23 @@ class csvActorExport extends QubitFlatfileExport
     {
       $relatedEntity = $item->getOpposedObject($resource->id);
 
-      if (QubitTerm::ROOT_ID == $item->type->parentId)
+      // Determine appropriate relation type term
+      $relationType = $item->type;
+      if ($item->subjectId == $resource->id)
       {
-        $category = $item->type;
-      }
-      else
-      {
-        $category = $item->type->parent;
+        $converseRelation = $this->getConverseTerm($item->type->id);
+        $relationType = (empty($converseRelation)) ? $relationType : $converseRelation;
       }
 
       $rows[] = array(
-        'sourceAuthorizedFormOfName' => $resource->authorizedFormOfName,
-        'targetAuthorizedFormOfName' => $relatedEntity->authorizedFormOfName,
-        'category'                   => (string)$category, // Return string representation for QubitTerm
-        'description'                => $item->description,
-        'date'                       => $item->date,
-        'startDate'                  => $item->startDate,
-        'endDate'                    => $item->endDate,
-        'culture'                    => $resource->culture
+        'objectAuthorizedFormOfName'  => $resource->authorizedFormOfName,
+        'subjectAuthorizedFormOfName' => $relatedEntity->authorizedFormOfName,
+        'relationType'                => (string)$relationType, // Return string representation for QubitTerm
+        'description'                 => $item->description,
+        'date'                        => $item->date,
+        'startDate'                   => $item->startDate,
+        'endDate'                     => $item->endDate,
+        'culture'                     => $resource->culture
       );
     }
 
@@ -241,5 +240,19 @@ class csvActorExport extends QubitFlatfileExport
     }
 
     return $results;
+  }
+
+  private function getConverseTerm($termId)
+  {
+    // Get any converse relations to the term
+    $converseTerms = QubitRelation::getBySubjectOrObjectId(
+      $termId, array('typeId' => QubitTerm::CONVERSE_TERM_ID)
+    );
+
+    // If converse relations exist, return first's related ID
+    if (count($converseTerms))
+    {
+      return $converseTerms[0]->getOpposedObject($termId);
+    }
   }
 }
