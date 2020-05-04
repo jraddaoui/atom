@@ -1,0 +1,25 @@
+name: Test purge and populate tasks
+on:
+  pull_request:
+  push:
+    branches:
+    - qa/**
+    - stable/**
+jobs:
+  purge-populate:
+    runs-on: ubuntu-18.04
+    env:
+      COMPOSE_FILE: ${{ github.workspace }}/docker/docker-compose.dev.yml
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Increase virtual memory max_map_count
+      run: sudo sysctl -w vm.max_map_count=262144
+    - name: Start Docker Compose environment
+      run: docker-compose up -d
+    - name: Sleep for 30 seconds
+      run: sleep 30
+    - name: Purge database
+      run: docker-compose exec -T atom php symfony tools:purge --demo
+    - name: Populate search index
+      run: docker-compose exec -T atom php symfony search:populate
