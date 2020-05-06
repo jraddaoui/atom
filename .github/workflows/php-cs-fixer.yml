@@ -11,7 +11,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    # TODO: actions/cache@v1
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.composer/cache/files
+        key: composer-${{ hashFiles('composer.json') }}
     - name: Install dependencies
       run: composer update
     - name: Run php-cs-fixer
