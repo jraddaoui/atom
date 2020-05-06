@@ -2,10 +2,6 @@ FROM php:7.3-fpm-alpine
 
 ENV FOP_HOME=/usr/share/fop-2.1 COMPOSER_ALLOW_SUPERUSER=1
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
-
-COPY . /atom/src
-
 RUN set -xe \
 		&& apk add --no-cache --virtual .phpext-builddeps \
 			gettext-dev \
@@ -47,13 +43,19 @@ RUN set -xe \
 			bash \
 		&& npm install -g "less@<2.0.0" \
 		&& curl -Ls https://archive.apache.org/dist/xmlgraphics/fop/binaries/fop-2.1-bin.tar.gz | tar xz -C /usr/share \
-		&& ln -sf /usr/share/fop-2.1/fop /usr/local/bin/fop \
-		&& make -C /atom/src/plugins/arDominionPlugin \
-		&& make -C /atom/src/plugins/arArchivesCanadaPlugin \
-		&& composer install -d /atom/src
+		&& ln -sf /usr/share/fop-2.1/fop /usr/local/bin/fop
+
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+COPY . /atom/src
 
 WORKDIR /atom/src
 
-ENTRYPOINT ["/atom/src/docker/entrypoint.sh"]
+RUN set -xe \
+		&& make -C plugins/arDominionPlugin \
+		&& make -C plugins/arArchivesCanadaPlugin \
+		&& composer install
+
+ENTRYPOINT ["docker/entrypoint.sh"]
 
 CMD ["fpm"]
