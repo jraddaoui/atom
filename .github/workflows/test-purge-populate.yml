@@ -9,16 +9,22 @@ jobs:
   purge-populate:
     runs-on: ubuntu-18.04
     env:
-      COMPOSE_FILE: ${{ github.workspace }}/docker/docker-compose.dev.yml
+      COMPOSE_FILE: ${{ github.workspace }}/docker/docker-compose.dev.yml:${{ github.workspace }}/docker/docker-compose.ci.yml
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+    - uses: whoan/docker-build-with-cache-action@v5
+      with:
+        username: jraddaoui
+        password: "${{ secrets.DOCKER_HUB }}"
+        image_name: jraddaoui/atom
+        image_tag: ci
     - name: Increase virtual memory max_map_count
       run: sudo sysctl -w vm.max_map_count=262144
     - name: Start Docker Compose environment
       run: docker-compose up -d
-    - name: Sleep for 30 seconds
-      run: sleep 30
+    - name: Sleep for 15 seconds
+      run: sleep 15
     - name: Purge database
       run: docker-compose exec -T atom php symfony tools:purge --demo
     - name: Populate search index

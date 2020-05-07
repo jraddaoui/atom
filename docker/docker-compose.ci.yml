@@ -1,0 +1,10 @@
+---
+version: "2"
+
+services:
+
+  atom:
+    image: jraddaoui/atom:ci
+
+  atom_worker:
+    image: jraddaoui/atom:ci
